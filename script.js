@@ -9,6 +9,159 @@ document.addEventListener("DOMContentLoaded", function (event) {
         localStorage.setItem("theme-color", switchToTheme)
         document.documentElement.setAttribute("data-theme", switchToTheme);
     }
+
+    // Soft interaction sounds. Audio is generated locally after the visitor's
+    // first interaction, so no sound file has to be loaded.
+    var audioContext;
+    var lastHoveredControl;
+    var interactiveSelector = 'a, button, input[type="submit"], .theme-color-toggle, .mobile-menu-toggle, .logo, .slider-navigation .prev, .slider-navigation .next, .companies-list li';
+
+    function playInteractionSound(type) {
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        audioContext = audioContext || new AudioContext();
+        if (audioContext.state !== 'running') {
+            audioContext.resume()
+                .then(function () { playInteractionSound(type); })
+                .catch(function () { /* The browser requires a click before audio can play. */ });
+            return;
+        }
+
+        var oscillator = audioContext.createOscillator();
+        var gain = audioContext.createGain();
+        var now = audioContext.currentTime;
+        var frequency = type === 'click' ? 430 : 620;
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, now);
+        oscillator.frequency.exponentialRampToValueAtTime(frequency * .8, now + .055);
+        gain.gain.setValueAtTime(.0001, now);
+        gain.gain.exponentialRampToValueAtTime(type === 'click' ? .035 : .018, now + .008);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + .075);
+        oscillator.connect(gain).connect(audioContext.destination);
+        oscillator.start(now);
+        oscillator.stop(now + .08);
+    }
+
+    document.addEventListener('pointerover', function (e) {
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        var control = e.target.closest(interactiveSelector);
+        if (!control || control === lastHoveredControl) return;
+        lastHoveredControl = control;
+        playInteractionSound('hover');
+    });
+    document.addEventListener('pointerout', function (e) {
+        if (!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest(interactiveSelector)) {
+            lastHoveredControl = null;
+        }
+    });
+    document.addEventListener('click', function (e) {
+        if (e.target.closest(interactiveSelector)) playInteractionSound('click');
+    });
+    document.addEventListener('focusin', function (e) {
+        if (e.target.matches(interactiveSelector)) playInteractionSound('hover');
+    });
+
+    // Interactive abstract dot field, rendered behind the page content.
+    var dotsCanvas = document.querySelector('.dots-background');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (dotsCanvas) {
+        var dotsContext = dotsCanvas.getContext('2d');
+        var dots = [];
+        var pointer = { x: -1000, y: -1000 };
+        var pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+        function createDots() {
+            var area = window.innerWidth * window.innerHeight;
+            var count = Math.max(24, Math.min(70, Math.floor(area / 18000)));
+            dots = Array.from({ length: count }, function () {
+                return {
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    vx: (Math.random() - .5) * .22,
+                    vy: (Math.random() - .5) * .22,
+                    radius: Math.random() * 2 + 1
+                };
+            });
+        }
+
+        function resizeDots() {
+            dotsCanvas.width = window.innerWidth * pixelRatio;
+            dotsCanvas.height = window.innerHeight * pixelRatio;
+            dotsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+            createDots();
+        }
+
+        function drawDots() {
+            var darkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+            var dotColor = darkTheme ? 'rgba(177, 170, 255, .42)' : 'rgba(103, 91, 228, .62)';
+            var lineColor = darkTheme ? 'rgba(177, 170, 255, .12)' : 'rgba(103, 91, 228, .24)';
+            dotsContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+            dots.forEach(function (dot, index) {
+                var dx = dot.x - pointer.x;
+                var dy = dot.y - pointer.y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+                if (!reduceMotion && distance < 130) {
+                    dot.x += (dx / distance || 0) * .7;
+                    dot.y += (dy / distance || 0) * .7;
+                }
+                if (!reduceMotion) {
+                    dot.x += dot.vx;
+                    dot.y += dot.vy;
+                    if (dot.x < -10 || dot.x > window.innerWidth + 10) dot.vx *= -1;
+                    if (dot.y < -10 || dot.y > window.innerHeight + 10) dot.vy *= -1;
+                }
+
+                dotsContext.beginPath();
+                dotsContext.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                dotsContext.fillStyle = dotColor;
+                dotsContext.fill();
+
+                for (var next = index + 1; next < dots.length; next++) {
+                    var near = dots[next];
+                    var xDistance = dot.x - near.x;
+                    var yDistance = dot.y - near.y;
+                    if (xDistance * xDistance + yDistance * yDistance < 10500) {
+                        dotsContext.beginPath();
+                        dotsContext.moveTo(dot.x, dot.y);
+                        dotsContext.lineTo(near.x, near.y);
+                        dotsContext.strokeStyle = lineColor;
+                        dotsContext.lineWidth = .6;
+                        dotsContext.stroke();
+                    }
+                }
+            });
+
+            if (!reduceMotion) window.requestAnimationFrame(drawDots);
+        }
+
+        window.addEventListener('pointermove', function (e) {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+        });
+        window.addEventListener('resize', resizeDots);
+        resizeDots();
+        drawDots();
+    }
+
+    // Let the hanging ID card respond gently to the cursor.
+    var idFrame = document.querySelector('.hero-section .image');
+    var idCard = document.querySelector('.hero-section .id-card');
+    if (idFrame && idCard && !reduceMotion) {
+        idFrame.addEventListener('pointermove', function (e) {
+            var bounds = idFrame.getBoundingClientRect();
+            var rotateY = ((e.clientX - bounds.left) / bounds.width - .5) * 10;
+            var rotateX = ((e.clientY - bounds.top) / bounds.height - .5) * -8;
+            idCard.style.setProperty('--rotate-x', rotateX.toFixed(2) + 'deg');
+            idCard.style.setProperty('--rotate-y', rotateY.toFixed(2) + 'deg');
+        });
+        idFrame.addEventListener('pointerleave', function () {
+            idCard.style.setProperty('--rotate-x', '0deg');
+            idCard.style.setProperty('--rotate-y', '0deg');
+        });
+    }
     // AOS
     AOS.init({
         once: true,

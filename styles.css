@@ -97,6 +97,20 @@ body {
     font-family: 'Inter', sans-serif;
     font-weight: 400;
     color: var(--cinder);
+    position: relative;
+    isolation: isolate;
+}
+.dots-background {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+header, main, footer {
+    position: relative;
+    z-index: 1;
 }
 [data-theme="dark"] body {
     background: var(--midnight-express);
@@ -115,7 +129,7 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto;
 }
 .primary {
-    font-size: 30px;
+    font-size: 25px;
     font-weight: 900;
     color: var(--purple);
 }
@@ -442,23 +456,84 @@ input[type='text']::placeholder, input[type='email']::placeholder,::placeholder 
 .hero-section .image {
     position: relative;
     width: 100%;
-    max-width: 420px;
-    flex: 0 1 420px;
-    aspect-ratio: 4 / 3;
+    max-width: 380px;
+    min-height: 456px;
+    flex: 0 1 380px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    perspective: 1000px;
+    isolation: isolate;
 }
-.hero-section .image .cover {
+.hero-section .image .id-card {
+    --rotate-x: 0deg;
+    --rotate-y: 0deg;
+    position: relative;
+    width: min(100%, 320px);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .75);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .82);
+    box-shadow: 0 24px 45px rgba(55, 49, 116, .22), 0 5px 10px rgba(35, 46, 53, .12);
+    transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) rotateZ(-2deg);
+    transform-origin: 50% 0;
+    transition: transform .22s ease-out, box-shadow .22s ease-out;
+    will-change: transform;
+}
+.hero-section .image:hover .id-card {
+    box-shadow: 0 30px 52px rgba(55, 49, 116, .3), 0 8px 16px rgba(35, 46, 53, .13);
+}
+.hero-section .image .id-card-photo {
+    position: relative;
+    margin: 12px 12px 0;
+    overflow: hidden;
+    aspect-ratio: 1 / 1.07;
+    border-radius: 14px;
     background: var(--purple-light-1);
+}
+.hero-section .image .id-card-photo::after {
+    content: '';
     position: absolute;
-    inset: 16px -16px -16px 16px;
-    border-radius: 16px;
-    z-index: -1;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .18), transparent 45%);
+    pointer-events: none;
 }
 .hero-section .image .avatar {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 16px;
+    object-position: center 26%;
+}
+.hero-section .image .id-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 15px 20px 17px;
+    color: var(--cinder);
+    line-height: 1.35;
+}
+.hero-section .image .id-card-label {
+    color: var(--purple);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+}
+.hero-section .image .id-card-details strong {
+    font-family: 'Plus Jakarta Sans', serif;
+    font-size: 16px;
+}
+.hero-section .image .id-card-details span:last-child {
+    color: var(--cinder-light);
+    font-size: 11px;
+}
+[data-theme="dark"] .hero-section .image .id-card {
+    border-color: rgba(255, 255, 255, .18);
+    background: rgba(45, 51, 70, .94);
+}
+[data-theme="dark"] .hero-section .image .id-card-details {
+    color: var(--white);
 }
 
 /* SERVICES SECTION */
