@@ -152,8 +152,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
     if (idFrame && idCard && !reduceMotion) {
         idFrame.addEventListener('pointermove', function (e) {
             var bounds = idFrame.getBoundingClientRect();
-            var rotateY = ((e.clientX - bounds.left) / bounds.width - .5) * 10;
-            var rotateX = ((e.clientY - bounds.top) / bounds.height - .5) * -8;
+            var rotateY = ((e.clientX - bounds.left) / bounds.width - .5) * 18;
+            var rotateX = ((e.clientY - bounds.top) / bounds.height - .5) * -14;
             idCard.style.setProperty('--rotate-x', rotateX.toFixed(2) + 'deg');
             idCard.style.setProperty('--rotate-y', rotateY.toFixed(2) + 'deg');
         });
@@ -232,29 +232,38 @@ document.addEventListener("DOMContentLoaded", function (event) {
     mobileMenuToggle.onclick = function () {
         document.querySelector(".header .nav .nav-links").classList.toggle('active');
     }
-    // Portfolio slider
-    var numberOfSlides = document.querySelectorAll('.swiper-slide').length;
-    new Swiper('.swiper', {
-        loop: false,
-        allowSlidePrev: numberOfSlides !== 1,
-        allowSlideNext: numberOfSlides !== 1,
+    // Stacked featured-project deck
+    var projectSlides = document.querySelectorAll('.project-carousel .swiper-slide').length;
+    new Swiper('.project-carousel', {
+        loop: projectSlides > 1,
+        effect: 'coverflow',
+        centeredSlides: true,
+        grabCursor: true,
+        speed: 600,
+        coverflowEffect: {
+            rotate: 12,
+            stretch: -32,
+            depth: 170,
+            modifier: 1,
+            slideShadows: false,
+        },
         breakpoints: {
             0: {
                 slidesPerView: 1,
-                spaceBetween: 16,
+                spaceBetween: 18,
             },
             769: {
-                slidesPerView: 2,
-                spaceBetween: 32,
+                slidesPerView: 1.25,
+                spaceBetween: 24,
             },
             1151: {
-                slidesPerView: 3,
-                spaceBetween: 56,
+                slidesPerView: 1.35,
+                spaceBetween: 30,
             },
         },
-        navigation: {
-            nextEl: '.slider-navigation .next',
-            prevEl: '.slider-navigation .prev',
+        pagination: {
+            el: '.project-section .swiper-pagination',
+            clickable: true,
         },
     });
     // Experiences
