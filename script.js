@@ -232,6 +232,61 @@ document.addEventListener("DOMContentLoaded", function (event) {
     mobileMenuToggle.onclick = function () {
         document.querySelector(".header .nav .nav-links").classList.toggle('active');
     }
+    // Certificate preview dialog
+    var certificateModal = document.querySelector('.certificate-modal');
+    var certificateModalImage = document.querySelector('.certificate-modal-image');
+    var certificateModalTitle = document.querySelector('#certificate-modal-title');
+    var lastCertificateTrigger;
+
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('[data-certificate-src]');
+        if (trigger) {
+            lastCertificateTrigger = trigger;
+            certificateModalImage.src = trigger.dataset.certificateSrc;
+            certificateModalImage.alt = trigger.dataset.certificateTitle;
+            certificateModalTitle.textContent = trigger.dataset.certificateTitle;
+            certificateModal.classList.add('is-open');
+            certificateModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+            certificateModal.querySelector('.certificate-modal-close').focus();
+        }
+
+        if (e.target.closest('[data-certificate-close]')) {
+            certificateModal.classList.remove('is-open');
+            certificateModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            if (lastCertificateTrigger) lastCertificateTrigger.focus();
+        }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && certificateModal.classList.contains('is-open')) {
+            certificateModal.querySelector('[data-certificate-close]').click();
+        }
+    });
+    // Contact form dialog
+    var contactModal = document.querySelector('.contact-modal');
+    var lastContactTrigger;
+    document.addEventListener('click', function (e) {
+        var contactTrigger = e.target.closest('[data-contact-open]');
+        if (contactTrigger) {
+            lastContactTrigger = contactTrigger;
+            contactModal.classList.add('is-open');
+            contactModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+            contactModal.querySelector('input[name="name"]').focus();
+        }
+        if (e.target.closest('[data-contact-close]')) {
+            contactModal.classList.remove('is-open');
+            contactModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            if (lastContactTrigger) lastContactTrigger.focus();
+        }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && contactModal.classList.contains('is-open')) {
+            contactModal.querySelector('[data-contact-close]').click();
+        }
+    });
     // Stacked featured-project deck
     var projectSlides = document.querySelectorAll('.project-carousel .swiper-slide').length;
     new Swiper('.project-carousel', {
@@ -280,28 +335,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         }
     });
-    // Skill
-    var bars = document.querySelectorAll(".progress-bar .main-bar .fill");
-    window.addEventListener('scroll', function () {
-        if (isInViewport(document.getElementsByClassName('progress-bar-wrapper')[0])) {
-            bars.forEach(item => {
-                if (isInViewport(item)) {
-                    item.style.width = item.getAttribute('data-width') + '%';
-                }
-            })
-        }
-    });
-
-    function isInViewport(el) {
-        var rect = el.getBoundingClientRect();
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-    }
-
     // Contact Form
     function validateForm() {
         if (document.contactForm.name.value == '') {
